@@ -1,0 +1,90 @@
+<html>
+<head>
+<title>New Document - Created By AjaXplorer</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <style type="text/css">
+    div.bar {
+    display: inline-block;
+    width: 20px;
+    height: 75px;   /* We'll override height later */
+    background-color: teal;
+    margin-right: 2px;
+      margin-bottom: 50px;
+    }
+    </style>
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script type="text/javascript">
+    var dataset
+    window.onload = function() {
+    d3.json("snowdata.json", function(error, data) {
+      if (error) {
+        console.log(error);
+      }
+      else {
+        dataset = data;
+        console.log(dataset);
+        drawBars();
+      }
+    });
+            };
+    
+    var drawBars = function() { 
+      var svgw = 1200;
+      var svgh = 100;
+      var svg = d3.select("body")
+            .append("svg")
+            .attr("width", svgw)   
+            .attr("height", svgh); 
+     svg.selectAll("rect")
+       .data(dataset)
+       .enter()
+       .append("rect")
+       .attr("x", function(d,i) {
+         return i*(svgw/dataset.length);
+       })
+       .attr("y", function(d) {
+         return svgh - d.count;
+       })
+       .attr("width", 10)
+       .attr("height", function(d) {
+         return d.count;
+       })
+       .attr("fill", function(d) {
+         if(d.day==3){
+           return "red";
+         }
+         if(d.day==4){
+           return "orange";
+         }
+         if(d.day==5) {
+           return "yellow";
+         }
+         if(d.day==6) {
+           return "green";
+         }
+         if(d.day==7) {
+           return "blue";
+         }
+         if(d.day==8) {
+           return "indigo";
+         }
+         if(d.day==9) {
+           return "violet";
+         }
+       });
+      /*
+    d3.select("body").selectAll("div")
+    .data(dataset)
+    .enter()
+    .append("div")
+    .attr("class", "bar")
+    .style("height", function(d) {
+    return d.count + "px";
+    });*/
+    };
+    </script>
+
+</body>
+</html>
