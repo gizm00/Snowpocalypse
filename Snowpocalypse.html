@@ -35,6 +35,17 @@
       text-align: center;
       margin-right: auto;
       margin-left: auto;
+      color: white;
+    }
+
+    div.spacer {
+      height: 30px;
+    }
+
+    div.stats {
+      color:white;
+      margin-right: auto;
+      margin-left: auto;
     }
 
     p.title {
@@ -45,7 +56,11 @@
       color: white
     }
 
-
+    svg.main {
+          margin-left: auto;
+          margin-right: auto;
+          display: block;
+    }
 
 
     </style>
@@ -55,8 +70,9 @@
   <script type="text/javascript">
     var dataset
     var margins = {top: 0, bottom: 30, left:100, right:0}
-    var width = 1200 - margins.left - margins.right
+    var width = 900 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
+    var svg
 
     window.onload = function() {
       d3.json("twitterdata_dayofweek.json", function(error, data) {
@@ -83,18 +99,32 @@
         .append("div")
           .attr("class", "tweet")
         .append("p")
-          .text("hello world!")
 
+      var margin
 
-    }
-    
-    var drawBars = function() { 
-      var svg = d3.select("body")
+      svg = d3.select("body")
         .append("svg")
           .attr("width", width + margins.left + margins.right)
           .attr("height", height + margins.top + margins.bottom)
+          .attr("class", "main")
         .append("g")
-          .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
+        .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
+
+      d3.select("body")
+        .append("div")
+          .attr("class", "spacer")
+
+      d3.select("body")
+        .append("div")
+          .attr("class", "stats")
+          .attr("align", "center")
+          
+          
+    }
+    
+    var drawBars = function() { 
+      
+
 
       // draw axis
       var y = d3.scale.linear()
@@ -126,33 +156,51 @@
         .orient("top")
 
               // draw bars
-     var bars = svg.selectAll("rect")
-       .data(dataset)
+      var bars = svg.selectAll("rect")
+        .data(dataset)
 
-    bars 
-       .enter()
-       .append("rect")
-         .attr("x", function(d,i) {
-           return xPos(i)
-         })
-         .attr("y", height)
-         .attr("fill", "white")      
-        
-         .attr("width", xBand.rangeBand())
-         .attr("height", 0)
+      bars 
+         .enter()
+         .append("rect")
+           .attr("x", function(d,i) {
+             return xPos(i)
+           })
+           .attr("y", height)
+           .attr("fill", "white")      
+          
+           .attr("width", xBand.rangeBand())
+           .attr("height", 0)
+           .attr("cursor", "pointer")
 
-    bars
-      .transition()
-      .delay(function(d,i) { return i*30})
-      .duration(100)
-      .ease("quad")
-       
-         .attr("height", function(d) { return height - y(d.count) })
-         .attr("y", function(d, i) {
-            return y(d.count);
-          })
-        
-       
+
+      bars
+        .transition()
+        .delay(function(d,i) { return i*30})
+        .duration(100)
+        .ease("quad")
+         
+           .attr("height", function(d) { return height - y(d.count) })
+           .attr("y", function(d, i) {
+              return y(d.count);
+            })
+          
+      bars.on("mouseover", function(d) {
+        d3.select(".tweet").text(d.TweetText)
+        //d3.selectAll(#rect).filter(dataset, function(element) { return element.count == this.count })
+        d3.select(this)
+          .attr("fill", "red")
+          .attr("opacity", 0.5)
+      });
+
+      bars.on("mouseout", function(d) {
+        d3.select(this).attr("fill", "white")
+        d3.select(".tweet").text("")
+      })
+
+      bars.on("click", function(d) {
+        d3.select(".stats").text("total tweets: " + d.count)
+      })
+
 
       svg.append("g")
         .call(yAxis)
