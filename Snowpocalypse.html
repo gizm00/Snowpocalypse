@@ -4,85 +4,166 @@
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <style type="text/css">
     div.bar {
-    display: inline-block;
-    width: 20px;
-    height: 75px;   /* We'll override height later */
-    background-color: teal;
-    margin-right: 2px;
+      display: inline-block;
+      width: 20px;
+      height: 75px;  
+      background-color: gray;
+      margin-right: 2px;
       margin-bottom: 50px;
     }
+
+    .y.axis line {
+      fill: none;
+      stroke: none;
+      shape-rendering: crispEdges;
+    }
+
+    .axis path {
+      fill: none;
+      stroke: none;
+      shape-rendering: crispEdges;
+    }
+
+    .axis text {
+      fill: white;
+    }
+
+
+    div.tweet {
+      width: 300px;
+      height: 100px;
+      text-align: center;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    p.title {
+      font-size: 40px;
+    }
+
+    p {
+      color: white
+    }
+
+
+
+
     </style>
 </head>
-<body bgcolor="#FFFFFF" text="#000000">
+<body bgcolor="gray" text="#000000">
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script type="text/javascript">
     var dataset
+    var margins = {top: 0, bottom: 30, left:100, right:0}
+    var width = 1200 - margins.left - margins.right
+    var height = 200 - margins.bottom - margins.top
+
     window.onload = function() {
-    d3.json("snowdata.json", function(error, data) {
-      if (error) {
-        console.log(error);
-      }
-      else {
-        dataset = data;
-        console.log(dataset);
-        drawBars();
-      }
-    });
-            };
+      d3.json("twitterdata_dayofweek.json", function(error, data) {
+        if (error) {
+          console.log(error);
+        }
+        else {
+          drawPage();
+          dataset = data.filter(function(element) { return element.day > 5 });
+          console.log(dataset);
+          drawBars();
+        }
+      });
+    };
+    
+    var drawPage = function() {
+      d3.select("body")
+        .append("p")
+          .attr("class", "title")
+          .text("#snowpocalypse")
+          .attr("align", "center")
+
+      d3.select("body")
+        .append("div")
+          .attr("class", "tweet")
+        .append("p")
+          .text("hello world!")
+
+
+    }
     
     var drawBars = function() { 
-      var svgw = 1200;
-      var svgh = 100;
       var svg = d3.select("body")
-            .append("svg")
-            .attr("width", svgw)   
-            .attr("height", svgh); 
-     svg.selectAll("rect")
+        .append("svg")
+          .attr("width", width + margins.left + margins.right)
+          .attr("height", height + margins.top + margins.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
+
+      // draw axis
+      var y = d3.scale.linear()
+        //.domain([0, d3.max(dataset, function(element) { return element.count})])
+        .domain([0, 120])
+        .range([height, 0])
+
+
+      var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .ticks(4)
+
+      var xIndexes = d3.range(0, dataset.length)
+      var xPos = d3.scale.linear()
+        .domain([0,dataset.length])
+        .range([0, width])
+
+      var xBand = d3.scale.ordinal()
+        .domain(xIndexes)
+        .rangeBands([0, width], 0.2, 0.2)
+
+      var x = d3.scale.ordinal()
+        .domain(dataset.map(function(element) { return element.dayName }))
+        .rangeBands([0, width],0.2, 0,2)
+
+      var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("top")
+
+              // draw bars
+     var bars = svg.selectAll("rect")
        .data(dataset)
+
+    bars 
        .enter()
        .append("rect")
-       .attr("x", function(d,i) {
-         return i*(svgw/dataset.length);
-       })
-       .attr("y", function(d) {
-         return svgh - d.count;
-       })
-       .attr("width", 10)
-       .attr("height", function(d) {
-         return d.count;
-       })
-       .attr("fill", function(d) {
-         if(d.day==3){
-           return "red";
-         }
-         if(d.day==4){
-           return "orange";
-         }
-         if(d.day==5) {
-           return "yellow";
-         }
-         if(d.day==6) {
-           return "green";
-         }
-         if(d.day==7) {
-           return "blue";
-         }
-         if(d.day==8) {
-           return "indigo";
-         }
-         if(d.day==9) {
-           return "violet";
-         }
-       });
-      /*
-    d3.select("body").selectAll("div")
-    .data(dataset)
-    .enter()
-    .append("div")
-    .attr("class", "bar")
-    .style("height", function(d) {
-    return d.count + "px";
-    });*/
+         .attr("x", function(d,i) {
+           return xPos(i)
+         })
+         .attr("y", height)
+         .attr("fill", "white")      
+        
+         .attr("width", xBand.rangeBand())
+         .attr("height", 0)
+
+    bars
+      .transition()
+      .delay(function(d,i) { return i*30})
+      .duration(100)
+      .ease("quad")
+       
+         .attr("height", function(d) { return height - y(d.count) })
+         .attr("y", function(d, i) {
+            return y(d.count);
+          })
+        
+       
+
+      svg.append("g")
+        .call(yAxis)
+        .attr("class", "y axis")
+
+      svg.append("g")
+        .call(xAxis)
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (height + margins.bottom) + ")")
+
+
     };
     </script>
 
