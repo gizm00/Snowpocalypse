@@ -48,6 +48,8 @@
       margin-left: auto;
     }
 
+    
+
     p.title {
       font-size: 40px;
     }
@@ -57,6 +59,12 @@
     }
 
     svg.main {
+          margin-left: auto;
+          margin-right: auto;
+          display: block;
+    }
+
+    svg.image.tweetpic {
           margin-left: auto;
           margin-right: auto;
           display: block;
@@ -100,7 +108,27 @@
           .attr("class", "tweet")
         .append("p")
 
+      /*d3.select("body")
+        .append("img")
+          .attr("class", "tweetpic")
+          .attr("src", 'http://pbs.twimg.com/media/BgExeYvCQAABDBs.jpg')
+          .attr("align", "middle")
+          .attr("width", "300px")
+          .attr("height", "200px")
+      */
       var margin
+
+      d3.select("body")
+        .append("svg")
+          .attr("class", "main")
+          .attr("width", "300px")
+          .attr("height", "200px")
+        .append("image")
+        .attr("class", "tweetpic")
+          .attr("xlink:href", 'http://photos-c.ak.instagram.com/hphotos-ak-xpa1/1922006_756312981046930_1867062335_n.jpg')
+          .attr("width", "300px")
+          .attr("height", "200px")
+          //.attr("transform", "translate(" + margins.left + "," + margins.top + ")");
 
       svg = d3.select("body")
         .append("svg")
@@ -109,6 +137,8 @@
           .attr("class", "main")
         .append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
+
+
 
       d3.select("body")
         .append("div")
@@ -186,6 +216,19 @@
           
       bars.on("mouseover", function(d) {
         d3.select(".tweet").text(d.TweetText)
+        var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(d.TweetText)
+
+        if (matchIndex != null) {
+          if (matchIndex[0] != null) {
+            var imageUrl = matchIndex[0]
+            /*d3.select(".tweetpic")
+              .attr("xlink:href", imageUrl)
+              .attr("x", 400)
+              .attr("y", 400)
+              .attr("width", 300)
+              .attr("height", 200)*/
+          }
+        }
         //d3.selectAll(#rect).filter(dataset, function(element) { return element.count == this.count })
         d3.select(this)
           .attr("fill", "red")
