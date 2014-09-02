@@ -81,15 +81,25 @@
     var width = 900 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
     var svg
+    var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    var dayFormat = d3.time.format("%Y-%m-%d %H:%M:%S")
 
     window.onload = function() {
-      d3.json("twitterdata_dayofweek.json", function(error, data) {
+      d3.csv("allsnowtweets.csv", function(error, data) {
         if (error) {
           console.log(error);
         }
         else {
           drawPage();
-          dataset = data.filter(function(element) { return element.day > 5 });
+          
+          dataset = data.filter(function(element) 
+            { 
+              var dateFromString = dayFormat.parse(element.TweetTimeStamp); 
+              var day = dateFromString.getDate()
+              element.normDayHour = new Date(2014, 1, day, dateFromString.getHours(), 0, 0, 0)
+              return day > 5; 
+            });
+
           console.log(dataset);
           drawBars();
         }
@@ -155,50 +165,60 @@
     var drawBars = function() { 
       
 
+      var histogram = d3.layout.histogram()
+                      .bins(90)
+                      (dataset.map(function(element) { return element.normDayHour }))
 
       // draw axis
-      var y = d3.scale.linear()
-        //.domain([0, d3.max(dataset, function(element) { return element.count})])
-        .domain([0, 120])
-        .range([height, 0])
 
+      var x = d3.scale.ordinal()
+    .domain(histogram.map(function(d)
+     { 
+      //return d.x; 
+      if (d.length > 0) {
+        return daysOfWeek[d[0].getDay()]
+      }
+     }))
+    .rangeBands([0, width], 0.2, 0.2)
+
+ 
+    var y = d3.scale.linear()
+    .domain([0, d3.max(histogram.map(function(d) { return d.y; }))])
+    .range([height, 0]);
 
       var yAxis = d3.svg.axis()
         .scale(y)
         .orient("left")
         .ticks(4)
 
-      var xIndexes = d3.range(0, dataset.length)
+      var xIndexes = d3.range(0, histogram.length)
       var xPos = d3.scale.linear()
-        .domain([0,dataset.length])
+        .domain([0,histogram.length])
         .range([0, width])
 
       var xBand = d3.scale.ordinal()
         .domain(xIndexes)
         .rangeBands([0, width], 0.2, 0.2)
-
-      var x = d3.scale.ordinal()
-        .domain(dataset.map(function(element) { return element.dayName }))
-        .rangeBands([0, width],0.2, 0,2)
+      
 
       var xAxis = d3.svg.axis()
         .scale(x)
         .orient("top")
 
               // draw bars
+    
       var bars = svg.selectAll("rect")
-        .data(dataset)
+        .data(histogram)
 
       bars 
          .enter()
          .append("rect")
-           .attr("x", function(d,i) {
+          .attr("x", function(d,i) {
              return xPos(i)
            })
            .attr("y", height)
            .attr("fill", "white")      
-          
-           .attr("width", xBand.rangeBand())
+          .attr("width", xBand.rangeBand())
            .attr("height", 0)
            .attr("cursor", "pointer")
 
@@ -208,28 +228,37 @@
         .delay(function(d,i) { return i*30})
         .duration(100)
         .ease("quad")
-         
-           .attr("height", function(d) { return height - y(d.count) })
-           .attr("y", function(d, i) {
-              return y(d.count);
-            })
+          .attr("height", function(d) { return height - y(d.y); })
+          .attr("y", function(d) { return y(d.y); });
           
       bars.on("mouseover", function(d) {
-        d3.select(".tweet").text(d.TweetText)
-        var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(d.TweetText)
+        if (d.length > 0) {
 
-        if (matchIndex != null) {
-          if (matchIndex[0] != null) {
-            var imageUrl = matchIndex[0]
-            /*d3.select(".tweetpic")
-              .attr("xlink:href", imageUrl)
-              .attr("x", 400)
-              .attr("y", 400)
-              .attr("width", 300)
-              .attr("height", 200)*/
-          }
+          var tweets = dataset.filter(function(data) {
+            var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
+            if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
+              return data
+         })
+          if (tweets.length > 0) {
+
+            d3.select(".tweet").text(tweets[Math.floor(Math.random() * tweets.length)].TweetText)
+            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(d.TweetText)
+
+            if (matchIndex != null) {
+              if (matchIndex[0] != null) {
+                var imageUrl = matchIndex[0]
+                //d3.select(".tweetpic")
+                //  .attr("xlink:href", imageUrl)
+                //  .attr("x", 400)
+                //  .attr("y", 400)
+                //  .attr("width", 300)
+                //  .attr("height", 200)
+              }
+            }
+         }
+          
         }
-        //d3.selectAll(#rect).filter(dataset, function(element) { return element.count == this.count })
+
         d3.select(this)
           .attr("fill", "red")
           .attr("opacity", 0.5)
@@ -241,8 +270,13 @@
       })
 
       bars.on("click", function(d) {
-        d3.select(".stats").text("total tweets: " + d.count)
+        if (d.length > 0)
+          d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
+        else
+          d3.select(".stats").text("total tweets: 0")
       })
+
+      
 
 
       svg.append("g")
