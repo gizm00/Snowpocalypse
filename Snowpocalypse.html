@@ -85,7 +85,7 @@
     var dayFormat = d3.time.format("%Y-%m-%d %H:%M:%S")
 
     window.onload = function() {
-      d3.csv("allsnowtweets.csv", function(error, data) {
+      d3.tsv("allsnowdata.tsv", function(error, data) {
         if (error) {
           console.log(error);
         }
@@ -135,7 +135,8 @@
           .attr("height", "200px")
         .append("image")
         .attr("class", "tweetpic")
-          .attr("xlink:href", 'http://photos-c.ak.instagram.com/hphotos-ak-xpa1/1922006_756312981046930_1867062335_n.jpg')
+          //.attr("xlink:href", 'http://photos-c.ak.instagram.com/hphotos-ak-xpa1/1922006_756312981046930_1867062335_n.jpg')
+          .attr("xlink:href", 'http://pbs.twimg.com/media/BfzjXmGCUAAqOmp.jpg')
           .attr("width", "300px")
           .attr("height", "200px")
           //.attr("transform", "translate(" + margins.left + "," + margins.top + ")");
@@ -229,20 +230,24 @@
         .duration(100)
         .ease("quad")
           .attr("height", function(d) { return height - y(d.y); })
-          .attr("y", function(d) { return y(d.y); });
+          .attr("y", function(d) { return y(d.y); })
           
       bars.on("mouseover", function(d) {
+        d3.select(this)
+          .attr("fill", "red")
+          .attr("opacity", 0.5)
         if (d.length > 0) {
 
           var tweets = dataset.filter(function(data) {
             var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
             if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
               return data
-         })
+            })
           if (tweets.length > 0) {
 
-            d3.select(".tweet").text(tweets[Math.floor(Math.random() * tweets.length)].TweetText)
-            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(d.TweetText)
+            var tweetText = tweets[Math.floor(Math.random() * tweets.length)].TweetText
+            d3.select(".tweet").text(tweetText)
+            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(tweetText)
 
             if (matchIndex != null) {
               if (matchIndex[0] != null) {
@@ -255,13 +260,9 @@
                 //  .attr("height", 200)
               }
             }
-         }
+          }
           
         }
-
-        d3.select(this)
-          .attr("fill", "red")
-          .attr("opacity", 0.5)
       });
 
       bars.on("mouseout", function(d) {
