@@ -76,7 +76,7 @@
 <body bgcolor="gray" text="#000000">
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script type="text/javascript">
-    var dataset
+    var dataset, picdata, picdict = {};
     var margins = {top: 0, bottom: 30, left:100, right:0}
     var width = 900 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
@@ -99,6 +99,18 @@
               element.normDayHour = new Date(2014, 1, day, dateFromString.getHours(), 0, 0, 0)
               return day > 5; 
             });
+
+          d3.tsv("snowpics.tsv", function(error, data) {
+            if (error) {
+              console.log(error)
+            }
+            else {
+              for (i=0; i< data.length; i++) {
+                picdict[data[i].TweetId] = data[i].TweetPicUrl
+              }
+            }
+          })
+
 
           console.log(dataset);
           drawBars();
@@ -245,19 +257,21 @@
             })
           if (tweets.length > 0) {
 
-            var tweetText = tweets[Math.floor(Math.random() * tweets.length)].TweetText
-            d3.select(".tweet").text(tweetText)
-            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(tweetText)
+            var randomTweet = tweets[Math.floor(Math.random() * tweets.length)]
+            d3.select(".tweet").text(randomTweet.TweetText)
+            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(randomTweet.TweetText)
+
+            // clear image
+            d3.select(".tweetpic")
+                    .attr("xlink:href", "")
 
             if (matchIndex != null) {
               if (matchIndex[0] != null) {
-                var imageUrl = matchIndex[0]
-                //d3.select(".tweetpic")
-                //  .attr("xlink:href", imageUrl)
-                //  .attr("x", 400)
-                //  .attr("y", 400)
-                //  .attr("width", 300)
-                //  .attr("height", 200)
+                if (picdict[randomTweet.TweetId] != null) {
+                  var url = picdict[randomTweet.TweetId]
+                  d3.select(".tweetpic")
+                    .attr("xlink:href", url)
+                }
               }
             }
           }
