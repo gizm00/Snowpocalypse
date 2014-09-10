@@ -1,0 +1,66 @@
+div.bar {
+  display: inline-block;
+  width: 20px;
+  height: 75px;  
+  background-color: gray;
+  margin-right: 2px;
+  margin-bottom: 50px;
+}
+
+.y.axis line {
+  fill: none;
+  stroke: none;
+  shape-rendering: crispEdges;
+}
+
+.axis path {
+  fill: none;
+  stroke: none;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  fill: white;
+}
+
+
+div.tweet {
+  width: 300px;
+  height: 100px;
+  text-align: center;
+  margin-right: auto;
+  margin-left: auto;
+  color: white;
+}
+
+div.spacer {
+  height: 30px;
+}
+
+div.stats {
+  color:white;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+
+
+p.title {
+  font-size: 40px;
+}
+
+p {
+  color: white
+}
+
+svg.main {
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+}
+
+svg.image.tweetpic {
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+}
