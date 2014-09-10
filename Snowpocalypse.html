@@ -10,7 +10,7 @@
     var dataset, picdata, picdict = {}
     var imagedict = {}
     var margins = {top: 0, bottom: 30, left:100, right:0}
-    var width = 900 - margins.left - margins.right
+    var width = 1200 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
     var svg
     var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -28,8 +28,9 @@
             { 
               var dateFromString = dayFormat.parse(element.TweetTimeStamp); 
               var day = dateFromString.getDate()
+              var hour = dateFromString.getHours()
               element.normDayHour = new Date(2014, 1, day, dateFromString.getHours(), 0, 0, 0)
-              return day > 5; 
+              return ((day == 6) & (hour > 7)) || (day > 6); 
             });
 
           d3.tsv("snowpics.tsv", function(error, data) {
@@ -123,7 +124,7 @@
       
 
       var histogram = d3.layout.histogram()
-                      .bins(90)
+                      .bins(82)
                       (dataset.map(function(element) { return element.normDayHour }))
 
       // draw axis
