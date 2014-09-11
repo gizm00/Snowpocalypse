@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>New Document - Created By AjaXplorer</title>
+<title>Visualizing Twitter response to the Feb 2014 Snowstorm in Portland, OR</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link rel="stylesheet" type="text/css" href="snowpocalypse.css">
 </head>
@@ -12,9 +12,11 @@
     var margins = {top: 0, bottom: 30, left:100, right:0}
     var width = 1200 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
-    var svg
+    var svg, imageSvg
     var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     var dayFormat = d3.time.format("%Y-%m-%d %H:%M:%S")
+    var picWidth = 200
+    var picPadding = 20
 
     window.onload = function() {
       d3.tsv("allsnowdata.tsv", function(error, data) {
@@ -86,12 +88,14 @@
       */
       var margin
 
-      d3.select("body")
+      imageSvg = d3.select("body")
         .append("svg")
           .attr("class", "main")
           .attr("width", "300px")
           .attr("height", "200px")
-        .append("image")
+
+
+        imageSvg.append("image")
         .attr("class", "tweetpic")
           //.attr("xlink:href", 'http://pbs.twimg.com/media/BfzjXmGCUAAqOmp.jpg')
           .attr("width", "300px")
@@ -129,15 +133,21 @@
 
       // draw axis
 
-      var x = d3.scale.ordinal()
-    .domain(histogram.map(function(d)
-     { 
-      //return d.x; 
-      if (d.length > 0) {
-        return daysOfWeek[d[0].getDay()]
-      }
-     }))
-    .rangeBands([0, width], 0.2, 0.2)
+      /*var x = d3.scale.ordinal()
+        .domain(histogram.map(function(d)
+        { 
+          //return d.x; 
+          if (d.length > 0) {
+            return daysOfWeek[d[0].getDay()]
+          }
+        }))
+        .rangeBands([0, width], 0.2, 0.2)*/
+
+    var x = d3.scale.ordinal()
+              //.domain(["7am", "12pm", "7pm", "12am", "7am", "12pm", "7pm", "12am", "7am", "12pm", "7pm", "12am","7am", "12pm", "7pm", "12am"])
+              .domain(["Day 0", "Day 1", "Day 2", "Day 3"])
+
+              .range([5*width/82, 29*width/82, 54*width/84, 77*width/82])
 
  
     var y = d3.scale.linear()
@@ -161,6 +171,8 @@
 
       var xAxis = d3.svg.axis()
         .scale(x)
+        //.tickValues(["7", "12", "7", "12", "7", "12", "7", "12", "7", "12", "7", "12","7", "12", "7", "12"])
+        //.tickValues([1,2,3,4,5,6,7,8,9,10,11,12])
         .orient("top")
 
               // draw bars
@@ -206,9 +218,7 @@
             d3.select(".tweet").text(randomTweet.TweetText)
             var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(randomTweet.TweetText)
 
-            // clear image
-            d3.select(".tweetpic")
-                    .attr("xlink:href", "")
+            
 
             if (matchIndex != null) {
               if (matchIndex[0] != null) {
@@ -216,7 +226,11 @@
                   var url = picdict[randomTweet.TweetId]
                   var imagePath = url.split('\/')
                   var imageName = imagePath[imagePath.length - 1]
-                  d3.select(".tweetpic")
+                  imageSvg.append("image")
+                    .attr("class", "tweetpic")
+                    .attr("width", "300px")
+                    .attr("height", "200px")
+                  //d3.select(".tweetpic")
                     .attr("xlink:href", "images/" + imageName)
                 }
               }
@@ -227,8 +241,13 @@
       });
 
       bars.on("mouseout", function(d) {
-        d3.select(this).attr("fill", "white")
+        d3.select(this)
+          .attr("fill", "white")
+          .attr("opacity", 1.0)
         d3.select(".tweet").text("")
+        // clear image
+            imageSvg.select(".tweetpic")
+                    .remove()
       })
 
       bars.on("click", function(d) {
