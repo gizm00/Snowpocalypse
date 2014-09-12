@@ -7,8 +7,9 @@
 <body bgcolor="gray" text="#000000">
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script type="text/javascript">
-    var dataset, picdata, picdict = {}
+    var dataset, picdata, picdict = { }
     var imagedict = {}
+    var dayHourDict = {}
     var margins = {top: 0, bottom: 30, left:100, right:0}
     var width = 1200 - margins.left - margins.right
     var height = 200 - margins.bottom - margins.top
@@ -18,55 +19,93 @@
     var picWidth = 200
     var picPadding = 20
 
-    window.onload = function() {
+    // image preloading and populating image dictionary
+    var preloadImages = function() {
+      d3.tsv("fileNames.txt", function(error, data) {
+        console.log("reading filenames.txt")
+        if (error) {
+          console.log(error)
+        }
+        else {
+          for(n=0; n<data.length;n++) {
+            var imageAdd = new Image()
+            imageAdd.src = "images/" + escape(data[n].fileName)
+            imagedict[data[n].fileName] = imageAdd
+          }
+        }
+        console.log("done processing filenames.txt")
+      })
+    }
+
+    // load image URLs and populate dictionary
+    var loadImageUrls = function() {
+            d3.tsv("snowpics.tsv", function(error, data) {
+        console.log("reading snowpics.tsv")
+        if (error) {
+          console.log(error)
+        }
+        else {
+          for (i=0; i< data.length; i++) {
+            picdict[data[i].TweetId] = data[i].TweetPicUrl
+
+          }
+        }
+        console.log("done processing snowpics.tsv")
+      })
+    }
+
+    // load & filter twitter data. create the normalized day hour property the histogram will be based on
+    var loadTweetsAndDraw = function() {
       d3.tsv("allsnowdata.tsv", function(error, data) {
+        console.log("reading allsnowdata.tsv")
         if (error) {
           console.log(error);
         }
-        else {
-          drawPage();
-          
+        else {       
           dataset = data.filter(function(element) 
             { 
               var dateFromString = dayFormat.parse(element.TweetTimeStamp); 
               var day = dateFromString.getDate()
               var hour = dateFromString.getHours()
               element.normDayHour = new Date(2014, 1, day, dateFromString.getHours(), 0, 0, 0)
+              element.imagePath = null
+              if (picdict[element.TweetId] != null) {
+                var url = picdict[element.TweetId] 
+                var imagePath = url.split('\/')
+                var imageName = imagePath[imagePath.length - 1]
+                if (imagedict[imageName] != null) {
+                  element.imagePath = imagedict[imageName].src
+                }
+              }
+              dayHourDict[element.TweetId] = element.normDayHour
               return ((day == 6) & (hour > 7)) || (day > 6); 
             });
-
-          d3.tsv("snowpics.tsv", function(error, data) {
-            if (error) {
-              console.log(error)
-            }
-            else {
-              for (i=0; i< data.length; i++) {
-                picdict[data[i].TweetId] = data[i].TweetPicUrl
-              }
-            }
-          })
-
-          d3.tsv("fileNames.txt", function(error, data) {
-            if (error) {
-              console.log(error)
-            }
-            else {
-              for(n=0; n<data.length;n++) {
-                var imageAdd = new Image()
-                imageAdd.src = "images/" + escape(data[n].fileName)
-                imagedict[data[n].fileName] = imageAdd
-              }
-            }
-          })
-
-
-          console.log(imagedict);
-          drawBars();
         }
-      });
+
+        console.log("done processing allsnowdata.tsv")
+
+        // dataset has been populated, draw elements
+        drawPage()
+        drawBars()
+        
+      })
+    }
+
+    window.onload = function() {
+
+      preloadImages()
+      loadImageUrls()
+      loadTweetsAndDraw()
+
     };
+
+    var drawTable = function(tweetBucket) {
+      // add image table based on tweets in tweetBucket
+
+    }
     
     var drawPage = function() {
+      console.log("drawPage")
       d3.select("body")
         .append("p")
           .attr("class", "title")
@@ -78,16 +117,6 @@
           .attr("class", "tweet")
         .append("p")
 
-      /*d3.select("body")
-        .append("img")
-          .attr("class", "tweetpic")
-          .attr("src", 'http://pbs.twimg.com/media/BgExeYvCQAABDBs.jpg')
-          .attr("align", "middle")
-          .attr("width", "300px")
-          .attr("height", "200px")
-      */
-      var margin
-
       imageSvg = d3.select("body")
         .append("svg")
           .attr("class", "main")
@@ -97,10 +126,8 @@
 
         imageSvg.append("image")
         .attr("class", "tweetpic")
-          //.attr("xlink:href", 'http://pbs.twimg.com/media/BfzjXmGCUAAqOmp.jpg')
           .attr("width", "300px")
           .attr("height", "200px")
-          //.attr("transform", "translate(" + margins.left + "," + margins.top + ")");
 
       svg = d3.select("body")
         .append("svg")
@@ -109,8 +136,6 @@
           .attr("class", "main")
         .append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
-
-
 
       d3.select("body")
         .append("div")
@@ -124,41 +149,36 @@
           
     }
     
+    // Draw the histogram. Because I want interactivity I dont simply plot the histogram, I use the histogram
+    // data to position and size the rectangles for the chart.
     var drawBars = function() { 
       
+      console.log("drawBars")
 
+      // create a histogram, binning tweets based on dayHour
       var histogram = d3.layout.histogram()
-                      .bins(82)
-                      (dataset.map(function(element) { return element.normDayHour }))
+        .bins(82)
+        (dataset.map(function(element) { return element.normDayHour }))
 
-      // draw axis
-
-      /*var x = d3.scale.ordinal()
-        .domain(histogram.map(function(d)
-        { 
-          //return d.x; 
-          if (d.length > 0) {
-            return daysOfWeek[d[0].getDay()]
-          }
-        }))
-        .rangeBands([0, width], 0.2, 0.2)*/
-
-    var x = d3.scale.ordinal()
-              //.domain(["7am", "12pm", "7pm", "12am", "7am", "12pm", "7pm", "12am", "7am", "12pm", "7pm", "12am","7am", "12pm", "7pm", "12am"])
-              .domain(["Day 0", "Day 1", "Day 2", "Day 3"])
-
-              .range([5*width/82, 29*width/82, 54*width/84, 77*width/82])
-
- 
-    var y = d3.scale.linear()
-    .domain([0, d3.max(histogram.map(function(d) { return d.y; }))])
-    .range([height, 0]);
+      // create axis scales
+      var x = d3.scale.ordinal()
+        .domain(["Day 0", "Day 1", "Day 2", "Day 3"])
+        .range([5*width/82, 29*width/82, 54*width/84, 77*width/82])
+   
+      var y = d3.scale.linear()
+      .domain([0, d3.max(histogram.map(function(d) { return d.y; }))])
+      .range([height, 0]);
 
       var yAxis = d3.svg.axis()
         .scale(y)
         .orient("left")
         .ticks(4)
 
+      var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("top")
+
+      // create x axis positions. this will be used for drawing the histogram
       var xIndexes = d3.range(0, histogram.length)
       var xPos = d3.scale.linear()
         .domain([0,histogram.length])
@@ -168,110 +188,92 @@
         .domain(xIndexes)
         .rangeBands([0, width], 0.2, 0.2)
       
+          svg.append("g")
+      .call(yAxis)
+      .attr("class", "y axis")
 
-      var xAxis = d3.svg.axis()
-        .scale(x)
-        //.tickValues(["7", "12", "7", "12", "7", "12", "7", "12", "7", "12", "7", "12","7", "12", "7", "12"])
-        //.tickValues([1,2,3,4,5,6,7,8,9,10,11,12])
-        .orient("top")
-
-              // draw bars
-    
-      var bars = svg.selectAll("rect")
-        .data(histogram)
-
-      bars 
-         .enter()
-         .append("rect")
-          .attr("x", function(d,i) {
-             return xPos(i)
-           })
-           .attr("y", height)
-           .attr("fill", "white")      
-          .attr("width", xBand.rangeBand())
-           .attr("height", 0)
-           .attr("cursor", "pointer")
-
-
-      bars
-        .transition()
-        .delay(function(d,i) { return i*30})
-        .duration(100)
-        .ease("quad")
-          .attr("height", function(d) { return height - y(d.y); })
-          .attr("y", function(d) { return y(d.y); })
-          
-      bars.on("mouseover", function(d) {
-        d3.select(this)
-          .attr("fill", "red")
-          .attr("opacity", 0.5)
-        if (d.length > 0) {
-
-          var tweets = dataset.filter(function(data) {
-            var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
-            if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
-              return data
-            })
-          if (tweets.length > 0) {
-
-            var randomTweet = tweets[Math.floor(Math.random() * tweets.length)]
-            d3.select(".tweet").text(randomTweet.TweetText)
-            var matchIndex = /(http?:\/\/[\-\w@:%_\+.~#?,&\/\/=]+)/.exec(randomTweet.TweetText)
-
-            
-
-            if (matchIndex != null) {
-              if (matchIndex[0] != null) {
-                if (picdict[randomTweet.TweetId] != null) {
-                  var url = picdict[randomTweet.TweetId]
-                  var imagePath = url.split('\/')
-                  var imageName = imagePath[imagePath.length - 1]
-                  imageSvg.append("image")
-                    .attr("class", "tweetpic")
-                    .attr("width", "300px")
-                    .attr("height", "200px")
-                  //d3.select(".tweetpic")
-                    .attr("xlink:href", "images/" + imageName)
-                }
-              }
-            }
-          }
-          
-        }
-      });
-
-      bars.on("mouseout", function(d) {
-        d3.select(this)
-          .attr("fill", "white")
-          .attr("opacity", 1.0)
-        d3.select(".tweet").text("")
-        // clear image
-            imageSvg.select(".tweetpic")
-                    .remove()
-      })
-
-      bars.on("click", function(d) {
-        if (d.length > 0)
-          d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
-        else
-          d3.select(".stats").text("total tweets: 0")
-      })
-
+    svg.append("g")
+      .call(xAxis)
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + (height + margins.bottom) + ")")
       
 
+    // draw bars
+    
+    var bars = svg.selectAll("rect")
+      .data(histogram)
 
-      svg.append("g")
-        .call(yAxis)
-        .attr("class", "y axis")
+    bars 
+       .enter()
+       .append("rect")
+        .attr("x", function(d,i) {
+           return xPos(i)
+         })
+         .attr("y", height)
+         .attr("fill", "white")      
+        .attr("width", xBand.rangeBand())
+         .attr("height", 0)
+         .attr("cursor", "pointer")
 
-      svg.append("g")
-        .call(xAxis)
-        .attr("class", "axis")
-        .attr("transform", "translate(0," + (height + margins.bottom) + ")")
+
+    bars
+      .transition()
+      .delay(function(d,i) { return i*30})
+      .duration(100)
+      .ease("quad")
+        .attr("height", function(d) { return height - y(d.y); })
+        .attr("y", function(d) { return y(d.y); })
+        
+    bars.on("mouseover", function(d) {
+      d3.select(this)
+        .attr("fill", "red")
+        .attr("opacity", 0.5)
+      if (d.length > 0) {
+        var tweets = dataset.filter(function(data) {
+          var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
+          if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
+            return data
+          })
+        if (tweets.length > 0) {
+
+          var randomTweet = tweets[Math.floor(Math.random() * tweets.length)]
+          d3.select(".tweet").text(randomTweet.TweetText)
+            if (randomTweet.imagePath != null) {
+              imageSvg.append("image")
+                .attr("class", "tweetpic")
+                .attr("width", "300px")
+                .attr("height", "200px")
+                .attr("xlink:href", randomTweet.imagePath)
+            }
+        }
+        
+      }
+    });
+
+    bars.on("mouseout", function(d) {
+      d3.select(this)
+        .attr("fill", "white")
+        .attr("opacity", 1.0)
+      d3.select(".tweet").text("")
+      // clear image
+          imageSvg.select(".tweetpic")
+                  .remove()
+    })
+
+    bars.on("click", function(d) {
+      if (d.length > 0) {
+        d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
+        drawTable(d)
+      }
+      else
+        d3.select(".stats").text("total tweets: 0")
+    })
 
 
-    };
-    </script>
+
+
+  };
+</script>
 
 </body>
 </html>
