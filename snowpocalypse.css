@@ -42,6 +42,10 @@ div.spacer {
   height: 30px;
 }
 
+div.info {
+  color:white;
+}
+
 div.stats {
   color:white;
   margin-right: auto;

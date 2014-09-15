@@ -6,7 +6,6 @@
 </head>
 <body bgcolor="gray" text="#000000">
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script type="text/javascript">
     var dataset, picdata, picdict = { }
     var imagedict = {}
@@ -183,19 +182,29 @@
       svg = d3.select("body")
         .append("svg")
           .attr("width", width + margins.left + margins.right)
-          .attr("height", height + margins.top + margins.bottom)
+          .attr("height", height + margins.top + margins.bottom + 40)
           .attr("class", "main")
         .append("g")
         .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
 
+      d3.select("body")   
+        .append("div")
+          .attr("class", "info")  
+          .attr("style", "position: relative; left: " + 3*margins.left + ";")
+          .html("Created by <a href='http://www.gizmohacks.com'>gizmo</a>")
+
       d3.select("body")
         .append("div")
           .attr("class", "spacer")
+            
+
+     
 
       d3.select("body")
         .append("div")
           .attr("class", "stats")
           .attr("align", "center")
+
 
           
         
@@ -248,6 +257,13 @@
       .call(xAxis)
       .attr("class", "axis")
       .attr("transform", "translate(0," + (height + margins.bottom) + ")")
+
+    /*svg.append("g")
+      .attr("transform", "translate(0," + (height + margins.bottom + 20) + ")")
+      .append("text")
+        .style("stroke", "white")
+        .style("opacity", 1)
+        .text("whats some text gotta do to show up around here??")*/
       
 
     // draw bars
