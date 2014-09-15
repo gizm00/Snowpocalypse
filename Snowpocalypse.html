@@ -6,6 +6,7 @@
 </head>
 <body bgcolor="gray" text="#000000">
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script type="text/javascript">
     var dataset, picdata, picdict = { }
     var imagedict = {}
@@ -87,14 +88,19 @@
         console.log("done processing allsnowdata.tsv")
 
         // dataset has been populated, draw elements
-        drawPage()
-        drawBars()
+        setTimeout(function() {
+          drawPage()
+          drawBars()
+        }, (30.5 * 1000));
+        
         
       })
     }
 
-    window.onload = function() {
 
+    // load elements
+    window.onload = function() {
+      loadAnimation()
       preloadImages()
       loadImageUrls()
       loadTweetsAndDraw()
@@ -139,9 +145,18 @@
         }
       }
     }
+
+    var loadAnimation = function() {
+      d3.select("body")
+        .append("div")
+          .attr("class", "loader")
+          .style("opacity", 1)
+          .transition().duration(34000).style("opacity", 0)
+    }
     
     var drawPage = function() {
       console.log("drawPage")
+      d3.select(".loader").remove()
       d3.select("body")
         .append("p")
           .attr("class", "title")
@@ -262,6 +277,28 @@
         .attr("y", function(d) { return y(d.y); })
         
     bars.on("mouseover", function(d) {
+      
+    });
+
+    /*bars.on("mouseout", function(d) {
+      d3.select(this)
+        .attr("fill", "white")
+        .attr("opacity", 1.0)
+      d3.select(".tweet").text("")
+      // clear image
+          imageSvg.select(".tweetpic")
+                  .remove()
+    })*/
+
+    bars.on("click", function(d) {
+      // clear highlights
+      d3.selectAll("rect")
+        .attr("fill", "white") 
+      d3.select(".tweet").text("")
+      // clear image
+          imageSvg.select(".tweetpic")
+                  .remove()   
+
       d3.select(this)
         .attr("fill", "red")
         .attr("opacity", 0.5)
@@ -272,7 +309,8 @@
             return data
           })
         if (tweets.length > 0) {
-
+          d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
+          
           var randomTweet = tweets[Math.floor(Math.random() * tweets.length)]
           d3.select(".tweet").text(randomTweet.TweetText)
             if (randomTweet.imagePath != null) {
@@ -282,33 +320,14 @@
                 .attr("height", "200px")
                 .attr("xlink:href", randomTweet.imagePath)
             }
-        }
         
+          drawTable(tweets)
+        }
+        else {
+          d3.select(".stats").text("total tweets: 0")
+        }    
       }
-    });
-
-    bars.on("mouseout", function(d) {
-      d3.select(this)
-        .attr("fill", "white")
-        .attr("opacity", 1.0)
-      d3.select(".tweet").text("")
-      // clear image
-          imageSvg.select(".tweetpic")
-                  .remove()
-    })
-
-    bars.on("click", function(d) {
-      if (d.length > 0) {
-        var tweets = dataset.filter(function(data) {
-        var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
-        if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
-          return data
-        })
-        d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
-        drawTable(tweets)
-      }
-      else
-        d3.select(".stats").text("total tweets: 0")
+      
     })
 
 
