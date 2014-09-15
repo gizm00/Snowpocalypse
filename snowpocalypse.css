@@ -7,6 +7,11 @@ div.bar {
   margin-bottom: 50px;
 }
 
+table {
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .y.axis line {
   fill: none;
   stroke: none;

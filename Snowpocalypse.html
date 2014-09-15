@@ -17,7 +17,9 @@
     var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     var dayFormat = d3.time.format("%Y-%m-%d %H:%M:%S")
     var picWidth = 200
+    var picHeight = 300
     var picPadding = 20
+    var numColumns = Math.floor(width / (picWidth + picPadding))
 
     // image preloading and populating image dictionary
     var preloadImages = function() {
@@ -100,8 +102,42 @@
     };
 
     var drawTable = function(tweetBucket) {
+      // clear any existing table
+      d3.select("#picTable").remove()
       // add image table based on tweets in tweetBucket
+      var images = tweetBucket.filter(function(element) {
+        if(element.imagePath != null) { 
+          return element 
+        }
+      })
 
+      var numImages = images.length
+      console.log("number images: " + numImages)
+      var numRows = numImages/numColumns
+      var table = d3.select("body")
+                  .append("table")
+                    .attr("id", "picTable")
+                    .attr("width", width)
+                    .attr("height", numRows*picHeight)
+      var tbody = table.append("tbody")
+
+      for (i=0; i<numRows; i++) {
+        var row = tbody.append("tr")
+        for (n=0; n<numColumns; n++) {
+          var imagePath = images[i*numColumns + n].imagePath
+          console.log("imagePath: " + imagePath)
+          var column = row.append("td")
+          column.append("svg")
+            .attr("class", "main")
+            .attr("width", "300px")
+            .attr("height", "200px")
+              .append("image")
+              .attr("class", "tweetpic")
+              .attr("width", "300px")
+              .attr("height", "200px")
+              .attr("xlink:href", imagePath)
+        }
+      }
     }
     
     var drawPage = function() {
@@ -145,8 +181,9 @@
         .append("div")
           .attr("class", "stats")
           .attr("align", "center")
+
           
-          
+        
     }
     
     // Draw the histogram. Because I want interactivity I dont simply plot the histogram, I use the histogram
@@ -262,8 +299,13 @@
 
     bars.on("click", function(d) {
       if (d.length > 0) {
+        var tweets = dataset.filter(function(data) {
+        var dateFromString = dayFormat.parse(data.TweetTimeStamp); 
+        if((dateFromString.getDate() == d[0].getDate()) && (dateFromString.getHours() == d[0].getHours()))
+          return data
+        })
         d3.select(".stats").text( "Feb " + d[0].getDate() + " " + d[0].getHours() + ":00 total tweets: " + d.length)
-        drawTable(d)
+        drawTable(tweets)
       }
       else
         d3.select(".stats").text("total tweets: 0")
