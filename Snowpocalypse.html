@@ -185,13 +185,7 @@
           .attr("height", height + margins.top + margins.bottom + 40)
           .attr("class", "main")
         .append("g")
-        .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
-
-      d3.select("body")   
-        .append("div")
-          .attr("class", "info")  
-          .attr("style", "position: relative; left: " + 3*margins.left + ";")
-          .html("Created by <a href='http://www.gizmohacks.com'>gizmo</a>")
+        .attr("transform", "translate(" + margins.left + "," + margins.top + ")")
 
       d3.select("body")
         .append("div")
@@ -257,14 +251,12 @@
       .call(xAxis)
       .attr("class", "axis")
       .attr("transform", "translate(0," + (height + margins.bottom) + ")")
-
-    /*svg.append("g")
-      .attr("transform", "translate(0," + (height + margins.bottom + 20) + ")")
       .append("text")
-        .style("stroke", "white")
-        .style("opacity", 1)
-        .text("whats some text gotta do to show up around here??")*/
-      
+        .attr("text-anchor", "left")
+        .attr("transform", "translate(0, 20)")
+        .text("Created by @gizm0_0")
+
+
 
     // draw bars
     
