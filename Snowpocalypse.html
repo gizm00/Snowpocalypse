@@ -149,13 +149,21 @@
       d3.select("body")
         .append("div")
           .attr("class", "loader")
-          .style("opacity", 1)
-          .transition().duration(34000).style("opacity", 0)
+          .transition().delay(20000).duration(10000).style("opacity", 0);
+          
+       //d3.select(".loader2")
+       // .append("img")
+       // .attr("src", "images/loadingani.gif");
+
+      d3.select(".loader")
+        .append("img")
+         .attr("class", "spinner")
+            
     }
     
     var drawPage = function() {
       console.log("drawPage")
-      d3.select(".loader").remove()
+      d3.select(".loader2").remove()
       d3.select("body")
         .append("p")
           .attr("class", "title")
