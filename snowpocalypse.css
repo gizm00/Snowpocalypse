@@ -71,7 +71,7 @@ img.spinner {
   height: 100%;
   z-index: 9998;
   opacity: 1.0;
-  background: url('images/drinkfinal.png') 50% 50% no-repeat rgb(249,249,249);
+  background: url('images/loading2.png') 50% 50% no-repeat rgb(249,249,249);
 }
 
 p.title {
